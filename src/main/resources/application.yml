@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+pax:
+  base-url: https://api.whatspos.com/p-market-api
+  key: L936R3E0MXC7PE18QP9Y
+  secret: 42BGUAXOEGVIIHH1H47BLT8A48P1BX7HPCGE4E90
+
+goinsight:
+  time-zone: Africa/Abidjan
+  date-format: yyyy-MM-dd
+  date-time-format: yyyy-MM-dd'T'HH:mm:ss'Z'
+  full-history: true # true pour 1ère exécution
+  debug-columns: true
+  greenpay:
+    insight-id: 4e5fryeq # ⚠️ à ajuster si besoin
+    battery-insight-id : zr6unnm5 # ⚠️ à ajuster si besoin
+    page-size: 500        # essaye 200 (ou 500 si autorisé)
+    max-pages: 600         # pour limiter le nb de pages (0 = illimité)
+  ingestion:
+    enabled: true # cron off par défaut
+    cron: "0 */5 * * * *" # toutes les 1 minute
+    out-dir: target/ingestion
+
+spring:
+  datasource:
+    url: jdbc:mysql://mysql-devgp.alwaysdata.net:3306/devgp_paxws?useSSL=false&allowPublicKeyRetrieval=true&tcpKeepAlive=true&connectTimeout=10000&socketTimeout=30000&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true
+    username: devgp_paxapp
+    password: PasswordPx2024
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: HikariPool-1
+      maximum-pool-size: 10
+      minimum-idle: 2
+    # IMPORTANT : ces 3 paramètres évitent d’avoir des connexions mortes dans le pool
+      maxLifetime: 1700000        # 28m20s (toujours < wait_timeout serveur)
+      idleTimeout: 600000         # 10m (déréférence les connexions inactives)
+      keepaliveTime: 300000       # 5m (ping périodique si la connexion reste idle)
+      connectionTimeout: 15000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.globally_quoted_identifiers: true
+
+auth:
+  jwt:
+    secret: mySecretKey123456789012345678902 # clé secrète (min 32 chars)
+    ttlMillis: 86400000 # 1 jour
+  enabled: true
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+
+logging:
+  level:
+    root: INFO
+    com.pax.market.api: INFO
+    com.example.paxapi: DEBUG
