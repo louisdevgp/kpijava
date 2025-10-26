@@ -3,77 +3,47 @@ package com.example.paxapi.kpi.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
 @Table(name = "kpi_policy")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class KpiPolicy {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Builder.Default
-    @Column(name = "name", nullable = false, length = 64)
-    private String name = "DEFAULT";
+  @Column(name = "name", length = 128, nullable = false)
+  private String name;
 
-    // Activation des critères
-    @Builder.Default
-    @Column(name = "use_internet", nullable = false)
-    private boolean useInternet = true;
+  // Flags d’activation des critères (BOOLEAN -> TINYINT(1) côté MySQL)
+  @Column(name = "use_internet")
+  private Boolean useInternet;
 
-    @Builder.Default
-    @Column(name = "use_tpe_on", nullable = false)
-    private boolean useTpeOn = true;
+  @Column(name = "use_tpe_on")
+  private Boolean useTpeOn;
 
-    @Builder.Default
-    @Column(name = "use_geofence", nullable = false)
-    private boolean useGeofence = true;
+  @Column(name = "use_geofence")
+  private Boolean useGeofence;
 
-    @Builder.Default
-    @Column(name = "use_battery", nullable = false)
-    private boolean useBattery = true;
+  @Column(name = "use_battery")
+  private Boolean useBattery;
 
-    @Builder.Default
-    @Column(name = "use_printer", nullable = false)
-    private boolean usePrinter = true;
+  @Column(name = "use_printer")
+  private Boolean usePrinter;
 
-    @Builder.Default
-    @Column(name = "use_paper", nullable = false)
-    private boolean usePaper = true;
+  @Column(name = "use_paper")
+  private Boolean usePaper;
 
-    // Seuils N / X
-    @Builder.Default
-    @Column(name = "daily_fail_N", nullable = false)
-    private int dailyFailN = 3;
+  // Seuils / paramètres
+  @Column(name = "daily_x")
+  private Integer dailyX;
 
-    @Builder.Default
-    @Column(name = "daily_X", nullable = false)
-    private int dailyX = 48;
+  @Column(name = "daily_fail_n")
+  private Integer dailyFailN;
 
-    @Builder.Default
-    @Column(name = "weekly_fail_N", nullable = false)
-    private int weeklyFailN = 12;
+  @Column(name = "weekly_x")
+  private Integer weeklyX;
 
-    @Builder.Default
-    @Column(name = "weekly_X", nullable = false)
-    private int weeklyX = 48 * 7;
-
-    @Builder.Default
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt = Instant.now();
-
-    @Builder.Default
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt = Instant.now();
-
-    @PreUpdate
-    public void touchUpdatedAt() {
-        this.updatedAt = Instant.now();
-    }
+  @Column(name = "weekly_fail_n")
+  private Integer weeklyFailN;
 }

@@ -1,33 +1,31 @@
-// src/main/java/com/example/paxapi/kpi/domain/KpiPolicyWeekLock.java
 package com.example.paxapi.kpi.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.*;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "kpi_policy_week_lock")
-@Getter @Setter
-@Builder @NoArgsConstructor @AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class KpiPolicyWeekLock {
 
+  // Clé = lundi ISO de la semaine
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
   @Column(name = "week_start", nullable = false)
   private LocalDate weekStart;
 
-  @Column(name = "week_year", nullable = false)
-  private int weekYear;
+  @Column(name = "policy_id", nullable = false)
+  private Long policyId;
 
-  @Column(name = "week_number", nullable = false)
-  private int weekNumber;
+  @Column(name = "week_number")
+  private Integer weekNumber;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "policy_id", nullable = false)
-  private KpiPolicy policy;
+  @Column(name = "week_year")
+  private Integer weekYear;
 
-  @Column(name = "locked_at", nullable = false)
-  private Instant lockedAt;
+  // si la colonne est gérée en DB (DEFAULT CURRENT_TIMESTAMP), on ne touche pas
+  @Column(name = "locked_at", insertable = false, updatable = false)
+  private OffsetDateTime lockedAt;
 }

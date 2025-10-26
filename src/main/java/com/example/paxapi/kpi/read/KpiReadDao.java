@@ -1,65 +1,73 @@
 package com.example.paxapi.kpi.read;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.List;
 
-@Repository
-@RequiredArgsConstructor
-public class KpiReadDao {
+public interface KpiReadDao {
 
-  @PersistenceContext
-  private final EntityManager em;
+  Page<DailyRow> daily(LocalDate date, Pageable pageable);
 
-  public Page<Object[]> daily(LocalDate date, Pageable pageable) {
-    // Requête data
-    String base = "SELECT * FROM daily_decision_view";
-    String where = (date != null) ? " WHERE date = :date" : "";
-    String sql = base + where + " ORDER BY 1"; // adapte l’ORDER BY sur la colonne voulue
+  Page<WeeklyRow> weekly(LocalDate weekStart, Pageable pageable);
 
-    Query q = em.createNativeQuery(sql);
-    if (date != null) q.setParameter("date", date);
-    q.setFirstResult((int) pageable.getOffset());
-    q.setMaxResults(pageable.getPageSize());
-    @SuppressWarnings("unchecked")
-    List<Object[]> rows = q.getResultList();
+  /* === DTOs === */
+  public static class DailyRow {
+    public LocalDate date;
+    public String terminalSn;
+    public String merchant;
+    public Integer okCount;
+    public Integer failCount;
+    public Integer checks;
+    public Integer decision; // 1=OK,0=KO
+    public Integer score;    // 0..100
+    public Boolean internetOk;
+    public Boolean tpeOnOk;
+    public Boolean geofenceOk;
+    public Boolean batteryOk;
+    public Boolean printerOk;
+    public Boolean paperOk;
 
-    // Requête count
-    String countSql = "SELECT COUNT(1) FROM daily_decision_view" + where;
-    Query countQ = em.createNativeQuery(countSql);
-    if (date != null) countQ.setParameter("date", date);
-    Number total = (Number) countQ.getSingleResult();
-
-    return new PageImpl<>(rows, pageable, total.longValue());
+    public DailyRow(LocalDate date, String terminalSn, String merchant,
+                    Integer okCount, Integer failCount, Integer checks,
+                    Integer decision, Integer score,
+                    Boolean internetOk, Boolean tpeOnOk, Boolean geofenceOk,
+                    Boolean batteryOk, Boolean printerOk, Boolean paperOk) {
+      this.date = date;
+      this.terminalSn = terminalSn;
+      this.merchant = merchant;
+      this.okCount = okCount;
+      this.failCount = failCount;
+      this.checks = checks;
+      this.decision = decision;
+      this.score = score;
+      this.internetOk = internetOk;
+      this.tpeOnOk = tpeOnOk;
+      this.geofenceOk = geofenceOk;
+      this.batteryOk = batteryOk;
+      this.printerOk = printerOk;
+      this.paperOk = paperOk;
+    }
   }
 
-  public Page<Object[]> weekly(LocalDate weekStart, Pageable pageable) {
-    // Requête data
-    String base = "SELECT * FROM weekly_decision_view";
-    String where = (weekStart != null) ? " WHERE week_start = :ws" : "";
-    String sql = base + where + " ORDER BY 1"; // adapte l’ORDER BY sur la colonne voulue
+  public static class WeeklyRow {
+    public LocalDate weekStart;
+    public String terminalSn;
+    public String merchant;
+    public Integer daysOk;
+    public Integer daysFail;
+    public Integer decision; // 1=OK,0=KO
+    public Integer score;    // 0..100
 
-    Query q = em.createNativeQuery(sql);
-    if (weekStart != null) q.setParameter("ws", weekStart);
-    q.setFirstResult((int) pageable.getOffset());
-    q.setMaxResults(pageable.getPageSize());
-    @SuppressWarnings("unchecked")
-    List<Object[]> rows = q.getResultList();
-
-    // Requête count
-    String countSql = "SELECT COUNT(1) FROM weekly_decision_view" + where;
-    Query countQ = em.createNativeQuery(countSql);
-    if (weekStart != null) countQ.setParameter("ws", weekStart);
-    Number total = (Number) countQ.getSingleResult();
-
-    return new PageImpl<>(rows, pageable, total.longValue());
+    public WeeklyRow(LocalDate weekStart, String terminalSn, String merchant,
+                     Integer daysOk, Integer daysFail, Integer decision, Integer score) {
+      this.weekStart = weekStart;
+      this.terminalSn = terminalSn;
+      this.merchant = merchant;
+      this.daysOk = daysOk;
+      this.daysFail = daysFail;
+      this.decision = decision;
+      this.score = score;
+    }
   }
 }

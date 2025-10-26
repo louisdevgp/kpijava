@@ -1,53 +1,68 @@
 package com.example.paxapi.kpi.web;
 
 import com.example.paxapi.kpi.domain.KpiPolicy;
-import com.example.paxapi.kpi.read.KpiReadDao;
 import com.example.paxapi.kpi.service.KpiPolicyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.nio.charset.StandardCharsets;
 
 @RestController
-@RequestMapping("/api/kpi")
+@RequestMapping("/api/kpi/policies")
 @RequiredArgsConstructor
 public class KpiController {
 
-  private final KpiReadDao readDao;
   private final KpiPolicyService svc;
 
-  @PostMapping("/policies")
-  public KpiPolicy upsertPolicy(@RequestBody KpiPolicy body) {
-    return svc.createOrUpdate(body);
+  @GetMapping
+  public Page<KpiPolicy> list(Pageable pageable) {
+    return svc.list(pageable);
   }
 
-  @GetMapping("/policies")
-  public java.util.List<KpiPolicy> listPolicies() {
-    return svc.listAll();
+  @GetMapping("/{id}")
+  public ResponseEntity<KpiPolicy> get(@PathVariable Long id) {
+    return svc.get(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
-  @PostMapping("/policies/lock")
-  public void lockWeek(@RequestParam String weekStart, @RequestParam Long policyId) {
-    svc.lockWeek(LocalDate.parse(weekStart), policyId);
+  @GetMapping("/latest")
+  public ResponseEntity<KpiPolicy> latest() {
+    return svc.latest().map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
-  @GetMapping("/daily")
-  public org.springframework.data.domain.Page<?> daily(
-      @RequestParam(required = false) String date,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "50") int size) {
-
-    LocalDate d = (date == null || date.isBlank()) ? null : LocalDate.parse(date);
-    return svc.daily(d, org.springframework.data.domain.PageRequest.of(page, size));
+  @PostMapping
+  public ResponseEntity<KpiPolicy> create(@RequestBody KpiPolicy body) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(svc.create(body));
   }
 
-  @GetMapping("/weekly")
-  public org.springframework.data.domain.Page<?> weekly(
-      @RequestParam(required = false) String weekStart,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "50") int size) {
+  @PutMapping("/{id}")
+  public ResponseEntity<KpiPolicy> update(@PathVariable Long id, @RequestBody KpiPolicy body) {
+    return ResponseEntity.ok(svc.update(id, body));
+  }
 
-    LocalDate w = (weekStart == null || weekStart.isBlank()) ? null : LocalDate.parse(weekStart);
-    return svc.weekly(w, org.springframework.data.domain.PageRequest.of(page, size));
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> delete(@PathVariable Long id) {
+    svc.delete(id);
+    return ResponseEntity.noContent().build();
+  }
+
+  // Export JSON (pour bouton "Exporter" côté front)
+  @GetMapping("/{id}/export")
+  public ResponseEntity<byte[]> export(@PathVariable Long id) {
+    var policy = svc.get(id).orElse(null);
+    if (policy == null) return ResponseEntity.notFound().build();
+    String json = toJson(policy);
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=policy-" + id + ".json")
+        .body(json.getBytes(StandardCharsets.UTF_8));
+  }
+
+  private String toJson(KpiPolicy p) {
+    // Simple (pas d’ObjectMapper pour éviter les deps ici)
+    // Si tu as Jackson, remplace par new ObjectMapper().writeValueAsString(p)
+    return "{ \"id\":" + p.getId() + " }";
   }
 }
